@@ -1,0 +1,86 @@
+services:
+  traefik:
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./config/traefik/traefik.dev.yaml:/etc/traefik/traefik.yaml:ro
+      - ./config/traefik/dynamic:/etc/traefik/dynamic:ro
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  auth:
+    build:
+      context: ../backend/auth
+    volumes:
+      - ../backend/auth/src:/app/src
+      - ../backend/auth/migrations:/app/migrations
+      - ../backend/auth/alembic.ini:/app/alembic.ini
+
+  places:
+    build:
+      context: ../backend/places
+    volumes:
+      - ../backend/places/src:/app/src
+      - ../backend/places/migrations:/app/migrations
+      - ../backend/places/alembic.ini:/app/alembic.ini
+
+  kafka:
+    ports:
+      - "9092:9092"
+    environment:
+      CLUSTER_ID: J9gpSxuySPGisjfSj3jCyw
+      KAFKA_LISTENERS: PLAINTEXT://:19092,CONTROLLER://:9093,PLAINTEXT_HOST://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://placebrain-kafka:19092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  devices:
+    build:
+      context: ../backend/devices
+    volumes:
+      - ../backend/devices/src:/app/src
+      - ../backend/devices/migrations:/app/migrations
+      - ../backend/devices/alembic.ini:/app/alembic.ini
+
+  collector:
+    build:
+      context: ../backend/collector
+    volumes:
+      - ../backend/collector/src:/app/src
+
+  gateway:
+    build:
+      context: ../backend/gateway
+    volumes:
+      - ../backend/gateway/src:/app/src
+      - ../var/gateway:/app/var/app
+
+  emqx:
+    ports:
+      - "18083:18083"
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const h=require('http');h.get('http://localhost:5173',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"

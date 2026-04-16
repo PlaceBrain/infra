@@ -1,0 +1,42 @@
+services:
+  traefik:
+    ports:
+      - "80:80"
+      - "443:443"
+      - "1883:1883"
+
+  gateway:
+    labels:
+      - "traefik.enable=true"
+      # Public API
+      - "traefik.http.routers.api.rule=PathPrefix(`/api/`) && !PathPrefix(`/api/internal/`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.api.loadbalancer.server.port=8000"
+      # Swagger docs
+      - "traefik.http.routers.docs.rule=PathPrefix(`/docs`) || Path(`/openapi.json`)"
+      - "traefik.http.routers.docs.entrypoints=websecure"
+      - "traefik.http.routers.docs.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.docs.service=api"
+
+  emqx:
+    labels:
+      - "traefik.enable=true"
+      # MQTT WebSocket
+      - "traefik.http.routers.mqtt-ws.rule=PathPrefix(`/mqtt`)"
+      - "traefik.http.routers.mqtt-ws.entrypoints=websecure"
+      - "traefik.http.routers.mqtt-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mqtt-ws.loadbalancer.server.port=8083"
+      # MQTT TCP
+      - "traefik.tcp.routers.mqtt-tcp.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mqtt-tcp.entrypoints=mqtt"
+      - "traefik.tcp.services.mqtt-tcp.loadbalancer.server.port=1883"
+
+  frontend:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"

@@ -1,0 +1,14 @@
+# Secrets
+.env
+
+# Runtime state (compose writes to ../var, which lives outside this repo)
+# Kept here defensively in case anyone runs compose from the wrong cwd.
+/var/
+
+# Personal scratch (not part of infra — kept out of the public repo entirely)
+/simulator/
+
+# Editor/OS
+.DS_Store
+.idea/
+.vscode/
