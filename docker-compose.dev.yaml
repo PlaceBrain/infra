@@ -5,7 +5,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik/traefik.dev.yaml:/etc/traefik/traefik.yaml:ro
-      - ./config/traefik/dynamic:/etc/traefik/dynamic:ro
 
   postgres:
     ports:

@@ -11,7 +11,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
-      - ./config/traefik/dynamic:/etc/traefik/dynamic:ro
       - traefik-certs:/etc/traefik/acme
     restart: unless-stopped
 
