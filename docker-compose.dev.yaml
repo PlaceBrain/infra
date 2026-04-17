@@ -13,6 +13,12 @@ services:
   auth:
     build:
       context: ../backend/auth
+    command:
+      - sh
+      - -c
+      - alembic upgrade head &&
+        exec watchfiles --filter python --target-type command 'python -m src.main' src
+    restart: unless-stopped
     volumes:
       - ../backend/auth/src:/app/src
       - ../backend/auth/migrations:/app/migrations
@@ -21,6 +27,12 @@ services:
   places:
     build:
       context: ../backend/places
+    command:
+      - sh
+      - -c
+      - alembic upgrade head &&
+        exec watchfiles --filter python --target-type command 'python -m src.main' src
+    restart: unless-stopped
     volumes:
       - ../backend/places/src:/app/src
       - ../backend/places/migrations:/app/migrations
@@ -42,6 +54,12 @@ services:
   devices:
     build:
       context: ../backend/devices
+    command:
+      - sh
+      - -c
+      - alembic upgrade head &&
+        exec watchfiles --filter python --target-type command 'python -m src.main' src
+    restart: unless-stopped
     volumes:
       - ../backend/devices/src:/app/src
       - ../backend/devices/migrations:/app/migrations
@@ -50,12 +68,18 @@ services:
   collector:
     build:
       context: ../backend/collector
+    command:
+      - sh
+      - -c
+      - exec watchfiles --filter python --target-type command 'python -m src.main' src
+    restart: unless-stopped
     volumes:
       - ../backend/collector/src:/app/src
 
   gateway:
     build:
       context: ../backend/gateway
+    restart: unless-stopped
     volumes:
       - ../backend/gateway/src:/app/src
       - ../var/gateway:/app/var/app
