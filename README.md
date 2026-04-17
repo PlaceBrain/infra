@@ -102,6 +102,14 @@ After a minute or two `docker compose ps` should show all 11 containers healthy.
 
 The `/api/internal/*` prefix is blocked externally and reachable only from inside the Docker network — EMQX calls those webhooks directly at `gateway:8000`.
 
+## Kafka topics
+
+The broker runs with `auto.create.topics.enable=false` (see `config/kafka/server.properties`) so every topic must be declared up front. The `kafka-init` service is a one-shot container that runs `kafka-topics.sh --create --if-not-exists` for each topic once the broker is healthy, then exits.
+
+Consumers (`places`, `devices`, `collector`) wait for `kafka-init` to exit successfully via `depends_on: { kafka-init: { condition: service_completed_successfully } }`. This avoids a cold-start race where a consumer subscribes to a topic that does not yet exist, which would otherwise surface as noisy "unknown topic" warnings.
+
+To add a new topic, add another `kafka-topics.sh --create --if-not-exists ...` line to the `kafka-init` service in `docker-compose.yaml`. Existing topics are idempotent — re-running the stack is safe.
+
 ## Makefile targets
 
 ```
