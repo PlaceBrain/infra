@@ -4,6 +4,8 @@ services:
       - "80:80"
       - "443:443"
       - "1883:1883"
+    environment:
+      TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL: ${TRAEFIK_ACME_EMAIL}
 
   gateway:
     labels:
