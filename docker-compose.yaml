@@ -61,6 +61,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('localhost', 50052)); s.close()"]
       interval: 5s
@@ -86,6 +88,10 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  # One-shot job that creates all declared Kafka topics on startup.
+  # The broker runs with auto.create.topics.enable=false, so consumers must wait
+  # for this container to exit successfully before subscribing — otherwise they
+  # spam "unknown topic" warnings and can race the broker on cold start.
   kafka-init:
     container_name: placebrain-kafka-init
     image: apache/kafka:4.0.0
@@ -137,6 +143,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('localhost', 50053)); s.close()"]
       interval: 5s
@@ -158,6 +166,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
       emqx:
         condition: service_healthy
     healthcheck:
